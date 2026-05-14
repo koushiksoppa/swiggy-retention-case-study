@@ -1,5 +1,5 @@
-# swiggy-retention-case-study
-# 🍔 Swiggy User Retention — Product Case Study
+# swiggy-Customer-Retention-Analysis
+# Customer-Retention-Analysis-Swiggy🍔
 
 
 ---
