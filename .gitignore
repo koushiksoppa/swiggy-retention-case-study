@@ -1,0 +1,5 @@
+# Raw dataset is downloaded, not committed - see data/README.md
+data/raw/
+__pycache__/
+*.pyc
+.venv/

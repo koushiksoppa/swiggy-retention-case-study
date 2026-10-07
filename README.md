@@ -1,5 +1,15 @@
-# swiggy-Customer-Retention-Analysis
-# Customer-Retention-Analysis-Swiggy🍔
+# Customer Retention Strategy – Swiggy Case Study 🍔
+
+A product and business case on one question: **how can Swiggy keep customers ordering after the first-order
+discounts end?** It moves from problem framing and customer segmentation to root causes, prioritised solutions
+and a phased roadmap, and then tests the argument against evidence:
+
+- **Real transaction data:** a cohort analysis of 541,909 invoice lines shows that only 41% of new customers
+  place a second order within 90 days, but 70% of those who reach a third order come back again.
+- **Real company figures:** a unit-economics model built on Swiggy's Q1 FY2027 shareholder letter shows that at an
+  assumed ₹400 acquisition cost and 10% monthly churn, lifetime value covers acquisition cost only 1.2x.
+- **Execution:** an implementation plan with owners and go/no-go gates, and an A/B test design with a computed
+  sample size.
 
 
 ---
@@ -15,8 +25,10 @@
 - [Metrics to Track](#7-metrics-to-track)
 - [Prioritization Framework](#8-prioritization-framework)
 - [Final Recommendation](#9-final-recommendation)
-- [Slide Deck Summary](#10-slide-deck-summary)
-- [How to Use This Case Study](#how-to-use-this)
+- [Evidence from Real Data](#10-evidence-from-real-data)
+- [Unit Economics](#11-unit-economics)
+- [Implementation and Testing](#12-implementation-and-testing)
+- [Data, Sources and Repository](#13-data-sources-and-repository)
 
 ---
 
@@ -26,10 +38,15 @@
 > *"How might we improve the retention rate of Swiggy users beyond the initial discount-driven orders, to increase monthly order frequency and lifetime value — without solely relying on offers?"*
 
 ### Key Observations
-- Swiggy **acquires users effectively** but loses them after 2–3 orders
-- Retention drops sharply once the **discount/coupon honeymoon period** ends
-- High CAC (~₹300–500/user) paired with low LTV = **broken unit economics**
-- Estimated **30-day re-order rate drops 40–60%** after first promo expires
+- **Hypothesis:** Swiggy acquires users effectively but loses many of them in their first few orders. Real
+  transaction data supports the pattern: only 41% of new customers order again within 90 days, while 70% of
+  customers who reach a third order come back again ([Section 10](#10-evidence-from-real-data)).
+- **Hypothesis:** retention drops once the discount period ends. Swiggy does not publish order-level discount
+  data, so this is tested directly in the A/B test design by splitting results by discounted vs full-price first
+  orders.
+- **Unit economics are tight:** at Swiggy's reported Q1 FY2027 food-delivery margin, an average active user
+  generates about ₹51 of Adjusted EBITDA a month. At an assumed CAC of ₹400 and 10% monthly churn, lifetime value
+  covers acquisition cost only 1.2x, against the usual 3x benchmark ([Section 11](#11-unit-economics)).
 
 ### Goals
 | Goal | Target Metric |
@@ -205,9 +222,12 @@
 
 ## 8. Prioritization Framework
 
-### RICE Score Summary
+### RICE Prioritisation
 
-| Feature | Reach | Impact | Confidence | Effort | RICE Score |
+Reach, Impact, Confidence and Effort are rated qualitatively (High / Medium / Low) as a structured judgement, not
+measured values; the stars summarise the overall priority.
+
+| Feature | Reach | Impact | Confidence | Effort | Priority |
 |---------|-------|--------|------------|--------|------------|
 | Re-order widget | High | High | High | Low | ⭐⭐⭐⭐⭐ |
 | Auto-credit delays | High | High | High | Low | ⭐⭐⭐⭐⭐ |
@@ -251,61 +271,106 @@ Low Impact  │  Fill-ins 📌       │  Deprioritize ❌
 
 ### The 3-Step Strategy
 
-1. **Fix trust first** — Auto-credits for delays and one-tap issue resolution rebuild user trust instantly. One bad delivery experience destroys 10 good ones. This is the highest-leverage, lowest-cost intervention.
+1. **Fix trust first** — Auto-credits for delays and one-tap issue resolution rebuild trust quickly. A single bad experience with no recovery is the main churn trigger for Dormant Users (Segment 4). This is the highest-leverage, lowest-cost intervention, provided credits are capped per user (see the implementation plan).
 
 2. **Build habit loops** — The "Your usual?" widget and order streaks are low-cost nudges that create the daily check-in habit, retaining users even without offers.
 
-3. **Create switching costs** — A contextual personalization engine and a Swiggy One Lite loyalty tier reduce price sensitivity and make switching to Zomato feel costly over time.
+3. **Create switching costs** — A contextual personalization engine and a Swiggy One Lite loyalty tier reduce price sensitivity and make switching to Zomato feel costly over time. The tier is offered **only to users before their third order**: the unit-economics model shows a benefit given to every user would need monthly churn to fall from 10% to about 4.6% just to break even.
 
 ### What to Avoid
 - ❌ **Doubling down on coupons** — solves the symptom, worsens the root cause
 - ❌ **Building social features before fixing core experience** — premature complexity
 - ❌ **Optimizing only for GMV** — can be inflated by discounts while retention crumbles
 
-### One-Line Interview Answer
-> *"I'd prioritize fixing the bad-experience recovery loop first, then build a habit system via re-order shortcuts and streaks, and finally invest in personalization to make every session feel curated — so users return to Swiggy out of preference, not promotion."*
+---
+
+## 10. Evidence from Real Data
+
+Swiggy does not publish customer-level data, so the core claim (retention is decided in the first few orders) is
+tested on the **UCI Online Retail dataset**: 541,909 real invoice lines from a UK online retailer, Dec 2010 to
+Dec 2011, covering 3,453 customers acquired in 2011. Code: `analysis/cohort_retention.py`. The dataset is not food
+delivery, so it tests the *pattern*, not Swiggy's retention levels.
+
+**1. The habit ladder.** The chance of ordering again within 90 days rises with every order a customer places.
+
+| After order | 1 | 2 | 3 | 4 | 5 |
+|---|---:|---:|---:|---:|---:|
+| Ordered again within 90 days | 41% | 59% | 70% | 80% | 90% |
+
+![Habit ladder](charts/habit_ladder.png)
+
+**2. Speed of the second order matters.** Of customers whose second order came within 30 days, 90% went on to a
+third order, against 66% when the second order came later (customers acquired at least 180 days before the data
+ends). This is an association, not proof of cause: fast repeaters may simply be keener customers. That is why
+the re-order widget is tested with an A/B test rather than assumed to work.
+
+**3. Cohort retention is low and flat.** Across January–August 2011 cohorts, about 19% of new customers were
+active in their first month after joining, and later months stay in a similar range.
+
+![Cohort retention](charts/cohort_retention.png)
+
+**What this means for the strategy:** effort should concentrate on getting new customers from order 1 to
+order 3, quickly. That is the logic behind the P0 re-order widget, proactive service recovery, and targeting the
+loyalty tier at pre-third-order users.
 
 ---
 
-## 10. Slide Deck Summary
+## 11. Unit Economics
 
-| Slide | Title | Key Points |
-|-------|-------|-----------|
-| 1 | Problem Definition | Discount dependency, broken unit economics, D30 retention drop |
-| 2 | User Segments & Journey | 4 segments, 8-step journey, key drop-off points |
-| 3 | Root Cause Analysis | Discount dependency, poor personalization, bad experience recovery |
-| 4 | Product Solutions | P0 quick wins, P1 big bets, P2 boosters |
-| 5 | Metrics & Prioritization | RICE framework, phased roadmap |
-| 6 | Recommendation | Trust → Habit → Switching costs. Measure D30 + orders/month |
+`model/unit_economics.xlsx` is a live Excel model: change any input and every output recalculates. Sourced inputs
+come from Swiggy's [Q1 FY2027 shareholder letter](https://www.swiggy.com/corporate/wp-content/uploads/2026/07/Q1-FY2027-Shareholder-letter.pdf):
+food-delivery GOV of ₹9,490 Cr, 19.2 Mn average monthly transacting users, and Adjusted EBITDA of ₹292 Cr
+(3.1% of GOV) for the quarter ended June 2026. CAC, churn and benefit cost are **assumptions**, highlighted in
+yellow and tested in sensitivity grids.
+
+| Output (base case: CAC ₹400, 10% monthly churn) | At reported 3.1% margin | At guided 5% margin |
+|---|---:|---:|
+| GOV per active user per month | ₹1,648 | ₹1,648 |
+| Profit per active user per month | ₹51 | ₹82 |
+| Lifetime value (12% annual discount rate) | ₹467 | ₹760 |
+| LTV / CAC | 1.2x | 1.9x |
+| Maximum CAC at a 3x LTV/CAC target | ₹156 | ₹253 |
+
+**Loyalty-tier break-even** (₹25 benefit cost per member per month, reported margin): paying for itself through
+extra spend alone would need members to spend 49% more. Paying for itself through retention needs monthly churn
+to fall from 10% to about 4.6%. Both are demanding, which is why the tier is targeted at pre-third-order users
+rather than offered to everyone.
+
+The model uses Adjusted EBITDA, which is after fixed costs, because contribution margin is not stated in the
+letter's text. Profit per user is therefore understated, and the conclusions are deliberately conservative.
 
 ---
 
-## How to Use This
+## 12. Implementation and Testing
 
-This case study is structured for PM interviews. Here's how to use each section:
-
-- **In a case interview:** Lead with Section 1 (problem) → 2 (segments) → 5 (RCA) → 6 (solutions) → 7 (metrics)
-- **For a product sense question:** Use Sections 6 + 9
-- **For a metrics question:** Use Section 7 directly
-- **For prioritization questions:** Use Section 8 (RICE + matrix)
-- **For execution/roadmap questions:** Use the phased roadmap in Section 8
+- **[Implementation plan](docs/IMPLEMENTATION_PLAN.md):** owners for each workstream, a 6-month timeline with
+  go/no-go gates, review cadence, and risks with mitigations.
+- **[A/B test design](docs/AB_TEST_DESIGN.md):** hypothesis, population, primary and guardrail metrics, and
+  decision rule for the re-order widget. Detecting a lift in 30-day re-order rate from 30% to 32% needs
+  **8,394 users per arm** at 95% confidence and 80% power (`analysis/ab_test_sample_size.py`).
 
 ---
 
-## 📁 Repo Structure
+## 13. Data, Sources and Repository
+
+| Source | Used for | Type |
+|---|---|---|
+| UCI Online Retail dataset (Chen, Sain & Guo, 2012) | Habit ladder, second-order speed, cohort retention | Real transactions, UK online retail |
+| Swiggy Q1 FY2027 shareholder letter | GOV, MTU, Adjusted EBITDA, margin guidance | Real company disclosures |
+| Case-study assumptions | CAC, churn, benefit cost, A/B baseline | Assumptions, labelled wherever used |
 
 ```
-swiggy-retention-case-study/
-│
-├── README.md                    ← This file (full case study)
-├── slides/
-│   └── slide-content.md         ← 6-slide deck content
-├── frameworks/
-│   ├── user-journey-map.md      ← Detailed journey map
-│   ├── pain-points.md           ← Pain point deep dive
-│   └── rice-scoring.md          ← RICE prioritization workings
-└── resources/
-    └── pm-interview-tips.md     ← How to present this in interviews
+README.md                      the case study
+analysis/cohort_retention.py   retention analysis on real transactions
+analysis/build_unit_economics.py  builds the Excel model
+analysis/ab_test_sample_size.py   A/B test sample sizes
+analysis/outputs/              analysis results (CSV, JSON)
+charts/                        charts used above
+model/unit_economics.xlsx      LTV/CAC and loyalty break-even model
+docs/IMPLEMENTATION_PLAN.md    owners, timeline, gates, risks
+docs/AB_TEST_DESIGN.md         experiment design
+data/README.md                 how to download the dataset
 ```
 
----
+Run: `pip install -r requirements.txt`, download the dataset as described in `data/README.md`, then run the three
+scripts in `analysis/`. Open the Excel model in Excel, which recalculates it on open.

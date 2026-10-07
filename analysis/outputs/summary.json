@@ -1,0 +1,21 @@
+{
+  "raw_invoice_lines": 541909,
+  "clean_invoice_lines": 397884,
+  "customers_all": 4338,
+  "new_customers_2011": 3453,
+  "orders_new_customers": 9549,
+  "habit_ladder_return_rate_pct": {
+    "1": 41.1,
+    "2": 59.2,
+    "3": 69.5,
+    "4": 80.2,
+    "5": 89.7,
+    "6": 89.3
+  },
+  "no_second_order_within_90d_pct": 58.9,
+  "second_order_speed": {
+    "2nd order after 30 days": 65.9,
+    "2nd order within 30 days": 89.8
+  },
+  "month1_retention_weighted_pct_jan_aug_cohorts": 18.9
+}
